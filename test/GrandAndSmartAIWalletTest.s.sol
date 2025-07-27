@@ -1,40 +1,40 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.19; 
+pragma solidity ^0.8.19;
 
-import {Test, console} from "forge-std/Test.sol"; 
+import {Test, console} from "forge-std/Test.sol";
 import {GrandToken} from "../src/GrandToken.sol";
-import {SmartAIWallet} from "../src/SmartAIWallet.sol"; 
+import {SmartAIWallet} from "../src/SmartAIWallet.sol";
 import {MockV3Aggregator} from "./mocks/mockAggregatorV3Interface.sol";
 
 contract GrandAndSmartAIWalletTest is Test {
     event MintingHappened(uint256 amount);
-    event BurningHappened(uint256 amount); 
+    event BurningHappened(uint256 amount);
     event CirculationMigrated(address indexed from, address indexed to, uint256 amount);
 
     GrandToken grandToken;
-    SmartAIWallet smartAIWallet;  
-    MockV3Aggregator mockFeed; 
+    SmartAIWallet smartAIWallet;
+    MockV3Aggregator mockFeed;
 
     address private aiWallet = 0x911de651a68F64b446716F56AF59cE5a0A2Bf381;
-    address private myWallet = 0xF60303B51a4BC5917a72558ab2a468eD839262A2; 
+    address private myWallet = 0xF60303B51a4BC5917a72558ab2a468eD839262A2;
 
     // Deploying contracts in this setUp function
     function setUp() external {
-        mockFeed = new MockV3Aggregator(123e8); 
-        grandToken = new GrandToken(0xeaae0a8c82976772c4b292bceb8f77e4f94a1ef178895cebb27e3d5d4edfe5a1); 
+        mockFeed = new MockV3Aggregator(123e8);
+        grandToken = new GrandToken(0xeaae0a8c82976772c4b292bceb8f77e4f94a1ef178895cebb27e3d5d4edfe5a1);
         vm.prank(myWallet);
         smartAIWallet = new SmartAIWallet(
-            address(grandToken), 
-            address(mockFeed), 
-            aiWallet, 
+            address(grandToken),
+            address(mockFeed),
+            aiWallet,
             0xeaae0a8c82976772c4b292bceb8f77e4f94a1ef178895cebb27e3d5d4edfe5a1
         );
 
-        grandToken.initialize(address(smartAIWallet), myWallet); 
+        grandToken.initialize(address(smartAIWallet), myWallet);
     }
 
-    // Testing the setUp function by assertEq(), etc.. 
+    // Testing the setUp function by assertEq(), etc..
     function testFromGrandTokenOfAiControllerIsAiWallet() public view {
         assertEq(grandToken.aiController(), address(smartAIWallet));
     }
@@ -42,6 +42,7 @@ contract GrandAndSmartAIWalletTest is Test {
     function testFromGrandTokenOfDeployerIsMyWallet() public view {
         assertEq(grandToken.deployer(), myWallet);
     }
+
     function testFromGrandTokenOfInitialSupply() public view {
         // Check that the initial supply is assigned to the deployer
         assertEq(grandToken.INITIAL_SUPPLY(), 1_000_000 * 1e18);
@@ -60,7 +61,7 @@ contract GrandAndSmartAIWalletTest is Test {
     function testFromGrandTokenOfAdjustSupplyThatIsNotAI() public {
         // Try to adjust supply from a non-AI address, should revert
         vm.prank(myWallet);
-        vm.expectRevert(); 
+        vm.expectRevert();
         grandToken.adjustSupply(1);
     }
 
@@ -87,15 +88,16 @@ contract GrandAndSmartAIWalletTest is Test {
         grandToken.adjustSupply(int256(1));
     }
 
-    function testFromGrandTokenOfAdjustSupplyByAIButWhenTreasuryDoesNotHaveEnoughFundsToTransferTowardsDeployerSoItMints() public {
+    function testFromGrandTokenOfAdjustSupplyByAIButWhenTreasuryDoesNotHaveEnoughFundsToTransferTowardsDeployerSoItMints(
+    ) public {
         // Make the treasury balance low by inserting into the AdjustSupply functinon a factor that is close enough to send most of the treasury balance towards the deployer
         uint256 treasury = grandToken.balanceOf(address(smartAIWallet));
         uint256 deployerBalance = grandToken.balanceOf(myWallet);
         assertEq(treasury, 750000 * 1e18);
-        assertEq(deployerBalance, 250000 * 1e18);  
+        assertEq(deployerBalance, 250000 * 1e18);
 
         // The treasury is around 250 000 tokens
-        vm.prank(address(smartAIWallet)); 
+        vm.prank(address(smartAIWallet));
         grandToken.adjustSupply(int256(0.5e18));
         assertEq(grandToken.balanceOf(address(smartAIWallet)), 250000 * 1e18);
 
@@ -104,7 +106,7 @@ contract GrandAndSmartAIWalletTest is Test {
         vm.expectEmit(false, false, false, true);
         grandToken.adjustSupply(int256(0.5e18));
         // Transfer the rest of the treasury balance to the deployer
-        emit MintingHappened(250000 * 1e18); 
+        emit MintingHappened(250000 * 1e18);
 
         assertEq(grandToken.balanceOf(myWallet), 1125000 * 1e18);
         assertEq(grandToken.balanceOf(address(smartAIWallet)), 125000 * 1e18);
@@ -114,7 +116,7 @@ contract GrandAndSmartAIWalletTest is Test {
         uint256 treasury = grandToken.balanceOf(address(smartAIWallet));
         uint256 deployerBalance = grandToken.balanceOf(myWallet);
         assertEq(treasury, 750000 * 1e18);
-        assertEq(deployerBalance, 250000 * 1e18); 
+        assertEq(deployerBalance, 250000 * 1e18);
 
         vm.prank(address(smartAIWallet));
         vm.expectEmit(false, false, false, true);
@@ -129,7 +131,7 @@ contract GrandAndSmartAIWalletTest is Test {
         uint256 treasury = grandToken.balanceOf(address(smartAIWallet));
         uint256 deployerBalance = grandToken.balanceOf(myWallet);
         assertEq(treasury, 750000 * 1e18);
-        assertEq(deployerBalance, 250000 * 1e18); 
+        assertEq(deployerBalance, 250000 * 1e18);
 
         vm.prank(address(smartAIWallet));
         vm.expectEmit(false, false, false, true);
@@ -143,7 +145,12 @@ contract GrandAndSmartAIWalletTest is Test {
     function testFromGrandTokenInitializeFunction() public {
         // Create new GrandToken and SmartAIWallet contracts
         GrandToken newGrandToken = new GrandToken(0xeaae0a8c82976772c4b292bceb8f77e4f94a1ef178895cebb27e3d5d4edfe5a1);
-        SmartAIWallet newSmartAIWallet = new SmartAIWallet(address(newGrandToken), address(mockFeed), aiWallet, 0xeaae0a8c82976772c4b292bceb8f77e4f94a1ef178895cebb27e3d5d4edfe5a1);
+        SmartAIWallet newSmartAIWallet = new SmartAIWallet(
+            address(newGrandToken),
+            address(mockFeed),
+            aiWallet,
+            0xeaae0a8c82976772c4b292bceb8f77e4f94a1ef178895cebb27e3d5d4edfe5a1
+        );
 
         newGrandToken.initialize(address(newSmartAIWallet), myWallet);
 
@@ -156,24 +163,34 @@ contract GrandAndSmartAIWalletTest is Test {
     function testFromGrandTokenMigrationFunction() public {
         // Create new GrandToken and SmartAIWallet contracts
         GrandToken newGrandToken = new GrandToken(0xeaae0a8c82976772c4b292bceb8f77e4f94a1ef178895cebb27e3d5d4edfe5a1);
-        SmartAIWallet newSmartAIWallet = new SmartAIWallet(address(newGrandToken), address(mockFeed), aiWallet, 0xeaae0a8c82976772c4b292bceb8f77e4f94a1ef178895cebb27e3d5d4edfe5a1);
+        SmartAIWallet newSmartAIWallet = new SmartAIWallet(
+            address(newGrandToken),
+            address(mockFeed),
+            aiWallet,
+            0xeaae0a8c82976772c4b292bceb8f77e4f94a1ef178895cebb27e3d5d4edfe5a1
+        );
         newGrandToken.initialize(address(newSmartAIWallet), myWallet);
         uint256 amount = newGrandToken.balanceOf(myWallet);
 
         // Create a dummy address for migration
         address dummyAddress = address(0x1234567890AbcdEF1234567890aBcdef12345678);
 
-        vm.expectEmit(true, true, false, true); 
-        emit CirculationMigrated(dummyAddress, dummyAddress, amount); 
+        vm.expectEmit(true, true, false, true);
+        emit CirculationMigrated(dummyAddress, dummyAddress, amount);
         newGrandToken.migrateCirculation(dummyAddress, "jel");
         assertEq(newGrandToken.balanceOf(dummyAddress), newGrandToken.INITIAL_SUPPLY() / 4);
-        assertEq(newGrandToken.deployer(), dummyAddress); 
+        assertEq(newGrandToken.deployer(), dummyAddress);
     }
 
     function testFromGrandTokenMigrationFunctionWithRevert() public {
         // Create new GrandToken and SmartAIWallet contracts
         GrandToken newGrandToken = new GrandToken(0xeaae0a8c82976772c4b292bceb8f77e4f94a1ef178895cebb27e3d5d4edfe5a1);
-        SmartAIWallet newSmartAIWallet = new SmartAIWallet(address(newGrandToken), address(mockFeed), aiWallet, 0xeaae0a8c82976772c4b292bceb8f77e4f94a1ef178895cebb27e3d5d4edfe5a1);
+        SmartAIWallet newSmartAIWallet = new SmartAIWallet(
+            address(newGrandToken),
+            address(mockFeed),
+            aiWallet,
+            0xeaae0a8c82976772c4b292bceb8f77e4f94a1ef178895cebb27e3d5d4edfe5a1
+        );
         newGrandToken.initialize(address(newSmartAIWallet), myWallet);
 
         // Create a dummy address for migration
@@ -206,7 +223,7 @@ contract GrandAndSmartAIWalletTest is Test {
     function testFromSmartAIWalletOfPriceFeedIsWorking() public view {
         // Just check that price feed returns a nonzero value
         int256 price = smartAIWallet.getLatestPrice();
-        console.log(price); 
+        console.log(price);
         assertGt(price, 0);
     }
 
@@ -249,30 +266,40 @@ contract GrandAndSmartAIWalletTest is Test {
         // Only AI controller can call adjustSupply
         int256 additional = 1;
 
-        vm.prank(aiWallet); 
-        vm.warp(block.timestamp + 1 weeks); 
-        vm.expectRevert(); 
+        vm.prank(aiWallet);
+        vm.warp(block.timestamp + 1 weeks);
+        vm.expectRevert();
         smartAIWallet.adjustSupply(additional);
     }
 
     function testFromSmartAIWalletMigrateTreasury() public {
         // Create new GrandToken and SmartAIWallet contracts
         GrandToken newGrandToken = new GrandToken(0xeaae0a8c82976772c4b292bceb8f77e4f94a1ef178895cebb27e3d5d4edfe5a1);
-        SmartAIWallet newSmartAIWallet = new SmartAIWallet(address(newGrandToken), address(mockFeed), aiWallet, 0xeaae0a8c82976772c4b292bceb8f77e4f94a1ef178895cebb27e3d5d4edfe5a1);
+        SmartAIWallet newSmartAIWallet = new SmartAIWallet(
+            address(newGrandToken),
+            address(mockFeed),
+            aiWallet,
+            0xeaae0a8c82976772c4b292bceb8f77e4f94a1ef178895cebb27e3d5d4edfe5a1
+        );
         newGrandToken.initialize(address(newSmartAIWallet), myWallet);
 
         // Create a dummy address for migration
         address dummyAddress = address(0x1234567890AbcdEF1234567890aBcdef12345678);
-        newSmartAIWallet.migrateTreasury(dummyAddress, "jel"); 
+        newSmartAIWallet.migrateTreasury(dummyAddress, "jel");
 
         assertEq(newGrandToken.balanceOf(address(newSmartAIWallet)), 0);
-        assertEq(newGrandToken.balanceOf(dummyAddress), 250000 * 1e18 * 3); 
+        assertEq(newGrandToken.balanceOf(dummyAddress), 250000 * 1e18 * 3);
     }
 
     function testFromSmartAIWalletMigrateOnlyAI() public {
         // Create new GrandToken and SmartAIWallet contracts
         GrandToken newGrandToken = new GrandToken(0xeaae0a8c82976772c4b292bceb8f77e4f94a1ef178895cebb27e3d5d4edfe5a1);
-        SmartAIWallet newSmartAIWallet = new SmartAIWallet(address(newGrandToken), address(mockFeed), aiWallet, 0xeaae0a8c82976772c4b292bceb8f77e4f94a1ef178895cebb27e3d5d4edfe5a1);
+        SmartAIWallet newSmartAIWallet = new SmartAIWallet(
+            address(newGrandToken),
+            address(mockFeed),
+            aiWallet,
+            0xeaae0a8c82976772c4b292bceb8f77e4f94a1ef178895cebb27e3d5d4edfe5a1
+        );
         newGrandToken.initialize(address(newSmartAIWallet), myWallet);
 
         // Create a dummy address for migration
@@ -285,24 +312,24 @@ contract GrandAndSmartAIWalletTest is Test {
     function testFromSmartAIWalletFund() public {
         // Fund the SmartAIWallet
         address dummyAddress = address(0x1234567890AbcdEF1234567890aBcdef12345678);
-        vm.deal(dummyAddress, 10 ether); 
+        vm.deal(dummyAddress, 10 ether);
 
         vm.prank(dummyAddress);
         smartAIWallet.fund{value: 0.1 ether}();
 
         assertEq(address(smartAIWallet).balance, 0.1 ether);
     }
-    
+
     function testFromSmartAIWalletWithdraw() public {
         // Fund the SmartAIWallet
         address dummyAddress = address(0x1234567890AbcdEF1234567890aBcdef12345678);
-        vm.deal(dummyAddress, 10 ether); 
+        vm.deal(dummyAddress, 10 ether);
 
         vm.prank(dummyAddress);
         smartAIWallet.fund{value: 0.1 ether}();
         assertEq(address(smartAIWallet).balance, 0.1 ether);
 
-        vm.prank(myWallet); 
+        vm.prank(myWallet);
         smartAIWallet.withdraw();
         assertEq(address(smartAIWallet).balance, 0);
     }

@@ -6,7 +6,6 @@ import {Script, console} from "forge-std/Script.sol";
 import {GrandToken} from "../src/GrandToken.sol";
 
 contract DeployGrandTokenScript is Script {
-
     bytes32 private password = bytes32(0); // <-- Enter password address
 
     function run() public {

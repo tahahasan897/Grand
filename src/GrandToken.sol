@@ -22,7 +22,7 @@ contract GrandToken is ERC20 {
     uint256 public constant CIRCULATING_CAP = INITIAL_SUPPLY / 4;
 
     /// @notice `factor` values are scaled by 1e18 (so 10% ⇒ 0.10*1e18 = 1e17)
-    uint256 private constant SCALE = 1e18; 
+    uint256 private constant SCALE = 1e18;
 
     /// @notice how many tokens have moved from treasury → circulation so far
     uint256 public totalReleased;
@@ -31,16 +31,16 @@ contract GrandToken is ERC20 {
     address public aiController;
 
     /// @notice the deployer
-    address public deployer; 
+    address public deployer;
 
     /// @notice Variable to track the initial admin/deployer for the `initialize` function
-    address private _initialAdmin; 
+    address private _initialAdmin;
 
     /// @notice Flag to ensure `initialize` is called only once
-    bool private _initialized = false; 
+    bool private _initialized = false;
 
     /// @notice password applied before the change
-    bytes32 private passwordHash; 
+    bytes32 private passwordHash;
 
     /*//////////////////////////////////////////////////////////////
                                 EVENTS
@@ -78,20 +78,19 @@ contract GrandToken is ERC20 {
     }
 
     modifier onlyWithPassword(string memory password) {
-        require(keccak256(abi.encodePacked(password)) == passwordHash, "Incorrect password"); 
-        _; 
+        require(keccak256(abi.encodePacked(password)) == passwordHash, "Incorrect password");
+        _;
     }
 
     function migrateCirculation(address to, string memory password) external onlyWithPassword(password) {
-        uint256 amount = balanceOf(deployer); 
-        require(amount > 0, "Nothing to migrate"); 
+        uint256 amount = balanceOf(deployer);
+        require(amount > 0, "Nothing to migrate");
 
         _transfer(deployer, to, amount);
         deployer = to;
 
         emit CirculationMigrated(deployer, to, amount);
     }
-
 
     /*//////////////////////////////////////////////////////////////
                         INITIALIZATION FUNCTION
@@ -145,7 +144,7 @@ contract GrandToken is ERC20 {
 
         // delta = currentSupply * |percent| / SCALE
         uint256 delta = (current * absFactor) / SCALE;
-        
+
         if (factor > 0) {
             /* ---------- EXPAND SUPPLY ---------- */
 
@@ -166,7 +165,7 @@ contract GrandToken is ERC20 {
             /* 2) if still not satisfied, mint the remainder to treasury */
             if (delta > 0) {
                 _mint(aiController, delta);
-                emit MintingHappened(delta); 
+                emit MintingHappened(delta);
 
                 // auto-transfer 50% of what was just minted
                 uint256 autoTransfer = delta / 2;
@@ -180,10 +179,7 @@ contract GrandToken is ERC20 {
             /* ---------- CONTRACT SUPPLY ---------- */
 
             // Ensure treasury (AI wallet) holds enough to burn
-            require(
-                balanceOf(aiController) >= delta,
-                "AI balance < burn amount"
-            );
+            require(balanceOf(aiController) >= delta, "AI balance < burn amount");
 
             _burn(aiController, delta);
             emit BurningHappened(delta);
