@@ -7,16 +7,31 @@ import {SmartAIWallet} from "../src/SmartAIWallet.sol";
 import {GrandToken} from "../src/GrandToken.sol";
 
 contract DeploySmartAIWalletScript is Script {
-    address private grandTokenContractAddress = 0xA5d0146ac093e25D557c13D399060C99F04B75fB;
-    address private priceFeed = 0x694AA1769357215DE4FAC081bf1f309aDC325306;
-    address private aiWallet = 0x911de651a68F64b446716F56AF59cE5a0A2Bf381;
-    address private deployer = 0xF60303B51a4BC5917a72558ab2a468eD839262A2; 
+    // ====== USER PARAMETERS ======
+    // Fill in your own parameters below before running the script
 
-    GrandToken token = GrandToken(grandTokenContractAddress);
+    address private grandTokenContractAddress = address(0); // <-- Enter GrandToken contract address
+    address private priceFeed = address(0);                 // <-- Enter Chainlink price feed address
+    address private aiWallet = address(0);                  // <-- Enter AI wallet address
+    address private deployer = address(0);                  // <-- Enter deployer address
+    bytes32 private password = bytes32(0);                // <-- Enter password address
+
+    // ============================
 
     function run() public {
+        require(grandTokenContractAddress != address(0), "Set grandTokenContractAddress");
+        require(priceFeed != address(0), "Set priceFeed");
+        require(aiWallet != address(0), "Set aiWallet");
+        require(deployer != address(0), "Set deployer");
+
         vm.startBroadcast();
-        SmartAIWallet smartAIWallet = new SmartAIWallet(grandTokenContractAddress, priceFeed, aiWallet, 0xeaae0a8c82976772c4b292bceb8f77e4f94a1ef178895cebb27e3d5d4edfe5a1);
+        SmartAIWallet smartAIWallet = new SmartAIWallet(
+            grandTokenContractAddress,
+            priceFeed,
+            aiWallet,
+            password
+        );
+        GrandToken token = GrandToken(grandTokenContractAddress);
         token.initialize(address(smartAIWallet), deployer); 
         vm.stopBroadcast();
 
