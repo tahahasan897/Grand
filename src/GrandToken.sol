@@ -254,29 +254,24 @@ contract GrandToken is ERC20 {
             }
         } else {
             /* ========== SUPPLY CONTRACTION LOGIC ========== */
-            
-            // Ensure treasury has sufficient tokens for burning
-            require(
-                balanceOf(aiController) >= delta,
-                "AI balance < burn amount"
-            );
-            // Burn from AI treasury
-            _burn(aiController, delta);
-            emit BurningHappened(delta);
 
-            // Create a variable that can take delta to do double operations
-            uint256 deployerAmount = balanceOf(deployer); 
-            uint256 deployerDelta = (absFactor * deployerAmount) / SCALE;
+            uint256 actualBurn = delta > balanceOf(aiController) ? balanceOf(aiController) : delta;
 
-            // Ensure the circulation has sufficient tokens for transference
-            require(
-                balanceOf(deployer) >= deployerDelta,
-                "Deployer balance < transfer amount"
-            );
+            // Take delta of deployer as well for double burning operations
+            uint256 deployerDelta = (absFactor * balanceOf(deployer)) / SCALE;
+            uint256 actualDeployerDelta = deployerDelta > balanceOf(deployer) ? balanceOf(deployer) : deployerDelta;
 
-            // And transfer the amount from deployer to treasury for extra scarcity
-            _transfer(deployer, aiController, deployerDelta); 
-            emit CirculationContraction(deployerDelta); 
+            // Burn from AI treasury (if possible)
+            if (actualBurn > 0) {
+                _burn(aiController, actualBurn);
+                emit BurningHappened(actualBurn);
+            }
+
+            // Then do circulation contraction for extra scarcity
+            if (actualDeployerDelta > 0) {
+                _transfer(deployer, aiController, actualDeployerDelta);
+                emit CirculationContraction(actualDeployerDelta);
+            }
         }
     }
 }
