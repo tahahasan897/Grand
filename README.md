@@ -57,13 +57,15 @@ PRIVATE_KEY=
 Fill in the ```password``` variable in ```DeployGrandToken.s.sol```. And run in the terminal:
 
 ```shell
-$ forge script script/DeployGrandToken.s.sol:DeployGrandTokenScript --rpc-url <your_rpc_url> --private-key <your_private_key>
+source .env
+export SEPOLIA_URL PRIVATE_KEY
+$ make scripting-grand
 ```
 
 Copy the address of the contract, and fill in the parameters in ```DeploySmartAIWallet.s.sol```. And run:
 
 ```shell
-$ forge script script/DeployGrandToken.s.sol:DeployGrandTokenScript --rpc-url <your_rpc_url> --private-key <your_private_key>
+$ make scripting-wallet
 ```
 
 ### Cast
