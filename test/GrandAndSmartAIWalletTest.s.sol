@@ -16,19 +16,25 @@ contract GrandAndSmartAIWalletTest is Test {
     SmartAIWallet smartAIWallet;
     MockV3Aggregator mockFeed;
 
-    address private aiWallet = 0x911de651a68F64b446716F56AF59cE5a0A2Bf381;
-    address private myWallet = 0xF60303B51a4BC5917a72558ab2a468eD839262A2;
+    address private aiWallet = address(0); // Required to input a MetaMask wallet address
+    address private myWallet = address(0); // Required to input a MetaMask wallet address
+    bytes32 private password = bytes32(0); // Required to input a hashed keccak256 password
 
     // Deploying contracts in this setUp function
     function setUp() external {
+        require(aiWallet != address(0), "Please, input a MetaMask wallet"); 
+        require(myWallet != address(0), "Please, input a MetaMask wallet");
+        require(password != bytes32(0), "Please, input a password");
+
+        // Creates a mock for a pricefeed. 
         mockFeed = new MockV3Aggregator(123e8);
-        grandToken = new GrandToken(0xeaae0a8c82976772c4b292bceb8f77e4f94a1ef178895cebb27e3d5d4edfe5a1);
+        grandToken = new GrandToken(password);
         vm.prank(myWallet);
         smartAIWallet = new SmartAIWallet(
             address(grandToken),
             address(mockFeed),
             aiWallet,
-            0xeaae0a8c82976772c4b292bceb8f77e4f94a1ef178895cebb27e3d5d4edfe5a1
+            password
         );
 
         grandToken.initialize(address(smartAIWallet), myWallet);
