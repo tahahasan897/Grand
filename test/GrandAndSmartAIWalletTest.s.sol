@@ -123,8 +123,8 @@ contract GrandAndSmartAIWalletTest is Test {
         emit BurningHappened(10000 * 1e18);
         grandToken.adjustSupply(int256(-0.01e18)); // Burn 1% of the total supply
 
-        assertEq(grandToken.balanceOf(address(smartAIWallet)), 740000 * 1e18);
-        assertEq(grandToken.balanceOf(myWallet), 250000 * 1e18);
+        assertEq(grandToken.balanceOf(address(smartAIWallet)), 742500 * 1e18);
+        assertEq(grandToken.balanceOf(myWallet), 247500 * 1e18);
     }
 
     function testFromGrandTokenOfAdjustSupplyByAIWhenTreasuryDoNotHaveEnoughFundsToBurn() public {
@@ -137,9 +137,15 @@ contract GrandAndSmartAIWalletTest is Test {
         vm.expectEmit(false, false, false, true);
         emit BurningHappened(750000 * 1e18);
         grandToken.adjustSupply(int256(-0.75e18)); // Burn 75% of the total supply
-        assertEq(grandToken.balanceOf(address(smartAIWallet)), 0);
-        vm.expectRevert();
+        assertEq(grandToken.balanceOf(address(smartAIWallet)), 187500 * 1e18);
+        assertEq(grandToken.balanceOf(address(myWallet)), 62500 * 1e18); 
+
+        vm.prank(address(smartAIWallet));
+        vm.expectEmit(false, false, false, true);
+        emit BurningHappened(187500 * 1e18);
         grandToken.adjustSupply(int256(-0.75e18)); // Try to burn
+        assertEq(grandToken.balanceOf(address(smartAIWallet)), 46875 * 1e18); 
+        assertEq(grandToken.balanceOf(address(myWallet)), 15625 * 1e18); 
     }
 
     function testFromGrandTokenInitializeFunction() public {
